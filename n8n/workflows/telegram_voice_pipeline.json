@@ -1,0 +1,362 @@
+{
+  "name": "J4P — Telegram Voice Pipeline (Päätyönkulku)",
+  "meta": {
+    "description": "Käsittelee kaikki Telegram-ääniviestit: transkriptio → triage → Notion + Telegram-vastaus"
+  },
+  "nodes": [
+    {
+      "id": "telegram-trigger",
+      "name": "Telegram Webhook",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "position": [100, 300]
+    },
+    {
+      "id": "check-voice",
+      "name": "Onko ääniviesti?",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message.voice?.file_id || $json.message.audio?.file_id || '' }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "position": [300, 300]
+    },
+    {
+      "id": "get-file",
+      "name": "Hae äänitiedosto",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.message.voice?.file_id || $json.message.audio?.file_id }}"
+            }
+          ]
+        }
+      },
+      "position": [500, 200]
+    },
+    {
+      "id": "download-audio",
+      "name": "Lataa audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/file/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "responseFormat": "file"
+      },
+      "position": [700, 200]
+    },
+    {
+      "id": "whisper-transcribe",
+      "name": "Groq Whisper (ilmainen)",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GROQ_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "file", "value": "={{ $binary.data }}", "parameterType": "formBinaryData" },
+            { "name": "model", "value": "whisper-large-v3" },
+            { "name": "language", "value": "fi" },
+            { "name": "response_format", "value": "json" }
+          ]
+        }
+      },
+      "position": [900, 200]
+    },
+    {
+      "id": "get-garmin-data",
+      "name": "Hae Garmin Body Battery",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "=http://localhost:8000/biometrics/today",
+        "options": {
+          "timeout": 5000,
+          "fullResponse": false
+        }
+      },
+      "continueOnFail": true,
+      "position": [900, 400]
+    },
+    {
+      "id": "triage-agent",
+      "name": "J4P Triage Agent (Gemini Flash)",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"parts\":[{\"text\":\"{{ $node['whisper-transcribe'].json.text }}\\nHRV_BODY_BATTERY: {{ $node['get-garmin-data'].json.body_battery || 'ei saatavilla' }}\\nHRV_STATUS: {{ $node['get-garmin-data'].json.hrv_status || 'ei saatavilla' }}\"}]}]"
+            },
+            {
+              "name": "systemInstruction",
+              "value": "{\"parts\":[{\"text\":\"Olet J4P triage-agentti. KRIITTISET SÄÄNNÖT: 1) Jos Jenna tai Juuso → type:TOXIC, lopeta 2) Jos body_battery < 40 TAI hrv_status='poor' → recovery_block_required:true 3) Jos juridinen asia → type:LEGAL 4) Vastaa AINA suomeksi. Palauta täsmälleen JSON ilman muuta tekstiä: {type,lifecycle_stage,energy_level_detected,fatigue_detected,recovery_block_required,toxic_contact_detected,legal_case_detected,sentiment,business_line,summary,notion_fields:{Title,Area,Notes,Energy_Required,Next_Action},telegram_response}\"}]}"
+            }
+          ]
+        }
+      },
+      "position": [1100, 300]
+    },
+    {
+      "id": "parse-triage",
+      "name": "Parsitaan triage-vastaus",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "const raw = items[0].json.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nlet cleaned = raw.trim();\nif (cleaned.startsWith('```')) {\n  cleaned = cleaned.replace(/```json?\\n?/, '').replace(/```$/, '').trim();\n}\ntry {\n  const parsed = JSON.parse(cleaned);\n  return [{ json: parsed }];\n} catch(e) {\n  return [{ json: { type: 'ERROR', telegram_response: 'Triage-agentti epäonnistui. ' + e.message }}];\n}"
+      },
+      "position": [1300, 300]
+    },
+    {
+      "id": "route-by-type",
+      "name": "Reititä tyypin mukaan",
+      "type": "n8n-nodes-base.switch",
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.type }}",
+        "rules": {
+          "rules": [
+            { "value2": "TOXIC", "output": 0 },
+            { "value2": "LEGAL", "output": 1 },
+            { "value2": "IDEA", "output": 2 },
+            { "value2": "ENERGY", "output": 3 }
+          ]
+        },
+        "fallbackOutput": 2
+      },
+      "position": [1500, 300]
+    },
+    {
+      "id": "toxic-alert",
+      "name": "TOXIC — Telegram hälytys",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.telegram_response }}",
+        "additionalFields": {}
+      },
+      "position": [1700, 100]
+    },
+    {
+      "id": "notion-legal",
+      "name": "Legal → Notion Legal Cases",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_LEGAL_DB_ID }}",
+        "title": "={{ $json.notion_fields.Title }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "Type", "type": "select", "selectValue": "Criminal" },
+            { "key": "Status", "type": "select", "selectValue": "Active" },
+            { "key": "Priority", "type": "select", "selectValue": "High" },
+            { "key": "Notes", "type": "rich_text", "textContent": "={{ $json.notion_fields.Notes }}" }
+          ]
+        }
+      },
+      "position": [1700, 250]
+    },
+    {
+      "id": "notion-idea",
+      "name": "IDEA → Notion Ideas",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_IDEAS_DB_ID }}",
+        "title": "={{ $json.notion_fields.Title }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "Lifecycle", "type": "select", "selectValue": "={{ $json.lifecycle_stage || 'Seedling' }}" },
+            { "key": "Energy_Required", "type": "select", "selectValue": "={{ $json.notion_fields.Energy_Required }}" },
+            { "key": "Notes", "type": "rich_text", "textContent": "={{ $json.notion_fields.Notes }}" }
+          ]
+        }
+      },
+      "position": [1700, 400]
+    },
+    {
+      "id": "notion-energy",
+      "name": "ENERGY → Notion Energy Log",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_ENERGY_DB_ID }}",
+        "title": "=Energia {{ $now.format('YYYY-MM-DD HH:mm') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "Energy_Level", "type": "number", "numberValue": "={{ $json.energy_level_detected }}" },
+            { "key": "Fatigue_Detected", "type": "checkbox", "checkboxValue": "={{ $json.fatigue_detected }}" },
+            { "key": "Recovery_Block", "type": "checkbox", "checkboxValue": "={{ $json.recovery_block_required }}" },
+            { "key": "Sentiment", "type": "select", "selectValue": "={{ $json.sentiment }}" }
+          ]
+        }
+      },
+      "position": [1700, 550]
+    },
+    {
+      "id": "telegram-reply",
+      "name": "Telegram — Vastaus Jonille",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.telegram_response }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "position": [1900, 350]
+    },
+    {
+      "id": "text-command",
+      "name": "Teksti-/komento-viesti",
+      "type": "n8n-nodes-base.set",
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.message.text || '' }}"
+            }
+          ]
+        }
+      },
+      "position": [500, 400]
+    },
+    {
+      "id": "commander-dispatch",
+      "name": "Commander — dispatch komento",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"parts\":[{\"text\":\"{{ $json.text }}\"}]}]"
+            },
+            {
+              "name": "systemInstruction",
+              "value": "{\"parts\":[{\"text\":\"Olet J4P Komentaja. Vastaa suomeksi, max 5 lausetta. Komennot: /status /focus /money /legal /market /build. Vapaa teksti → analysoi ja reitittää.\"}]}"
+            }
+          ]
+        }
+      },
+      "position": [700, 400]
+    },
+    {
+      "id": "commander-reply",
+      "name": "Telegram — Komentajan vastaus",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=🤖 *Komentaja:*\n{{ $json.candidates?.[0]?.content?.parts?.[0]?.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Telegram Webhook": {
+      "main": [[ { "node": "Onko ääniviesti?", "type": "main", "index": 0 } ]]
+    },
+    "Onko ääniviesti?": {
+      "main": [
+        [ { "node": "Hae äänitiedosto", "type": "main", "index": 0 } ],
+        [ { "node": "Teksti-/komento-viesti", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Hae äänitiedosto": {
+      "main": [[ { "node": "Lataa audio", "type": "main", "index": 0 } ]]
+    },
+    "Lataa audio": {
+      "main": [[ { "node": "Groq Whisper (ilmainen)", "type": "main", "index": 0 } ]]
+    },
+    "Groq Whisper (ilmainen)": {
+      "main": [[ { "node": "Hae Garmin Body Battery", "type": "main", "index": 0 } ]]
+    },
+    "Hae Garmin Body Battery": {
+      "main": [[ { "node": "J4P Triage Agent (Gemini Flash)", "type": "main", "index": 0 } ]]
+    },
+    "J4P Triage Agent (Gemini Flash)": {
+      "main": [[ { "node": "Parsitaan triage-vastaus", "type": "main", "index": 0 } ]]
+    },
+    "Parsitaan triage-vastaus": {
+      "main": [[ { "node": "Reititä tyypin mukaan", "type": "main", "index": 0 } ]]
+    },
+    "Reititä tyypin mukaan": {
+      "main": [
+        [ { "node": "TOXIC — Telegram hälytys", "type": "main", "index": 0 } ],
+        [ { "node": "Legal → Notion Legal Cases", "type": "main", "index": 0 } ],
+        [ { "node": "IDEA → Notion Ideas", "type": "main", "index": 0 } ],
+        [ { "node": "ENERGY → Notion Energy Log", "type": "main", "index": 0 } ]
+      ]
+    },
+    "IDEA → Notion Ideas": {
+      "main": [[ { "node": "Telegram — Vastaus Jonille", "type": "main", "index": 0 } ]]
+    },
+    "Legal → Notion Legal Cases": {
+      "main": [[ { "node": "Telegram — Vastaus Jonille", "type": "main", "index": 0 } ]]
+    },
+    "ENERGY → Notion Energy Log": {
+      "main": [[ { "node": "Telegram — Vastaus Jonille", "type": "main", "index": 0 } ]]
+    },
+    "Teksti-/komento-viesti": {
+      "main": [[ { "node": "Commander — dispatch komento", "type": "main", "index": 0 } ]]
+    },
+    "Commander — dispatch komento": {
+      "main": [[ { "node": "Telegram — Komentajan vastaus", "type": "main", "index": 0 } ]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "errorWorkflow": "J4P Error Handler",
+    "timezone": "Europe/Helsinki"
+  },
+  "tags": ["j4p", "core", "telegram", "triage"]
+}

@@ -1,0 +1,107 @@
+{
+  "name": "J4P Agent Comms",
+  "description": "AI Agent Army viestibussi. Agentit kirjoittavat tähän, muut lukevat inbox-viestinsä.",
+  "properties": {
+    "Title": {
+      "type": "title",
+      "example": "Scout → Komentaja 2026-05-15"
+    },
+    "From_Agent": {
+      "type": "select",
+      "options": [
+        { "name": "commander", "color": "red" },
+        { "name": "sentinel", "color": "orange" },
+        { "name": "scout", "color": "blue" },
+        { "name": "merchant", "color": "green" },
+        { "name": "craftsman", "color": "purple" },
+        { "name": "accountant", "color": "yellow" },
+        { "name": "lawyer", "color": "gray" },
+        { "name": "doctor", "color": "pink" },
+        { "name": "builder", "color": "brown" },
+        { "name": "architect", "color": "default" }
+      ]
+    },
+    "To_Agent": {
+      "type": "select",
+      "options": [
+        { "name": "commander", "color": "red" },
+        { "name": "sentinel", "color": "orange" },
+        { "name": "scout", "color": "blue" },
+        { "name": "merchant", "color": "green" },
+        { "name": "craftsman", "color": "purple" },
+        { "name": "accountant", "color": "yellow" },
+        { "name": "lawyer", "color": "gray" },
+        { "name": "doctor", "color": "pink" },
+        { "name": "builder", "color": "brown" },
+        { "name": "architect", "color": "default" },
+        { "name": "all", "color": "red" }
+      ]
+    },
+    "Message_Type": {
+      "type": "select",
+      "options": [
+        { "name": "Report", "color": "blue", "note": "Agentti raportoi tilanteen" },
+        { "name": "Alert", "color": "red", "note": "Kriittinen hälytys, reagoi heti" },
+        { "name": "Task", "color": "green", "note": "Pyyntö tehdä jotain" },
+        { "name": "Request", "color": "yellow", "note": "Tietopyyntö toiselta agentilta" }
+      ]
+    },
+    "Priority": {
+      "type": "select",
+      "options": [
+        { "name": "Critical", "color": "red" },
+        { "name": "High", "color": "orange" },
+        { "name": "Normal", "color": "blue" },
+        { "name": "Low", "color": "gray" }
+      ]
+    },
+    "Status": {
+      "type": "select",
+      "options": [
+        { "name": "Pending", "color": "yellow", "note": "Vastaanottaja ei vielä lukenut" },
+        { "name": "Read", "color": "blue", "note": "Luettu, ei toimenpiteitä" },
+        { "name": "Acted", "color": "green", "note": "Toimenpide suoritettu" },
+        { "name": "Archived", "color": "gray" }
+      ]
+    },
+    "Content": {
+      "type": "rich_text",
+      "note": "Viestin pääsisältö"
+    },
+    "Created": {
+      "type": "created_time"
+    },
+    "Acted_At": {
+      "type": "date",
+      "note": "Milloin toimenpide suoritettiin"
+    }
+  },
+  "views": [
+    {
+      "name": "📬 Inbox (Pending)",
+      "type": "table",
+      "filter": { "Status": "Pending" },
+      "sort": { "Priority": "desc", "Created": "desc" }
+    },
+    {
+      "name": "🚨 Kriittiset",
+      "type": "table",
+      "filter": { "Priority": "Critical", "Status": "Pending" }
+    },
+    {
+      "name": "📊 Kaikki viestit",
+      "type": "table",
+      "sort": { "Created": "desc" }
+    }
+  ],
+  "agent_communication_protocol": {
+    "description": "Miten agentit kommunikoivat",
+    "patterns": {
+      "report": "Agentti suoritti tehtävän → kirjoittaa Report To_Agent=commander",
+      "alert": "Agentti havaitsi uhkan → Alert Priority=Critical, To_Agent=commander",
+      "task_delegation": "Commander delegoi → Task To_Agent=merchant (tai muu)",
+      "broadcast": "Tärkeä tieto kaikille → To_Agent=all"
+    },
+    "polling": "Kukin agentti tarkistaa oman inbox-insa ajovuoronsa alussa (To_Agent=oma_nimi AND Status=Pending)"
+  }
+}
