@@ -1,0 +1,86 @@
+{
+  "name": "J4P Products Catalog",
+  "description": "Digitaalisten ja fyysisten tuotteiden kirjasto — myyntivalmis",
+  "properties": {
+    "Name": { "type": "title" },
+    "Type": {
+      "type": "select",
+      "options": ["Notion Template", "n8n Workflow", "AI Prompt Pack", "Canva Template", "Physical Product", "Service Package", "Consulting"]
+    },
+    "Status": {
+      "type": "select",
+      "options": [
+        { "name": "Idea", "color": "gray" },
+        { "name": "Building", "color": "blue" },
+        { "name": "Ready", "color": "green" },
+        { "name": "Live", "color": "purple" },
+        { "name": "Discontinued", "color": "red" }
+      ]
+    },
+    "Price": { "type": "number", "format": "euro" },
+    "Platform": {
+      "type": "select",
+      "options": ["Lemon Squeezy", "Gumroad", "Shopify", "n8n Creator Hub", "Direct", "Notion Marketplace"]
+    },
+    "Monthly_Revenue": { "type": "number", "format": "euro" },
+    "Total_Sales": { "type": "number" },
+    "Description": { "type": "rich_text" },
+    "Target_Audience": { "type": "rich_text" }
+  },
+  "seed_data": [
+    {
+      "Name": "J4P Second Brain — Notion Template",
+      "Type": "Notion Template",
+      "Status": "Building",
+      "Price": 49,
+      "Platform": "Lemon Squeezy",
+      "Description": "Täydellinen AuDHD-yrittäjän Second Brain. 9 tietokantaa, Kill Score, Legal Tracker, Energy Log, Dabrowski lifecycle.",
+      "Target_Audience": "ADHD/AuDHD yrittäjät, freelancerit, neurodivergentit"
+    },
+    {
+      "Name": "HIANO Roofing Lead System — n8n Workflow",
+      "Type": "n8n Workflow",
+      "Status": "Building",
+      "Price": 199,
+      "Platform": "Lemon Squeezy",
+      "Description": "Täydellinen kattohuolto-liidin automaatioputki. Telegram + Google Sheets CRM + säästölaskuri. Käyttövalmis 30min.",
+      "Target_Audience": "Kattohuolto- ja rakennusalan yrittäjät"
+    },
+    {
+      "Name": "Boring Business AI Pack — n8n + Prompts",
+      "Type": "n8n Workflow",
+      "Status": "Idea",
+      "Price": 99,
+      "Platform": "Lemon Squeezy",
+      "Description": "'Boring businesses with stupid margins' AI-automaatiopaketti: katto, painepesu, jätehuolto. n8n + Claude prompts.",
+      "Target_Audience": "Paikallispalveluyrittäjät Suomessa ja Nordicsissa"
+    },
+    {
+      "Name": "AI Prompt Frameworks Pack (FI/EN)",
+      "Type": "AI Prompt Pack",
+      "Status": "Ready",
+      "Price": 29,
+      "Platform": "Lemon Squeezy",
+      "Description": "9 prompt-kehystä: T-A-G, B-A-B, R-T-F, C-A-R-E, R-I-S-E, A-I-M, G-R-O, F-I-T, L-E-D. Suomenkielinen + englanninkielinen.",
+      "Target_Audience": "Yrittäjät, markkinoijat, Claude/ChatGPT käyttäjät"
+    },
+    {
+      "Name": "AKSIL Private Label Kattopinnoite — Suomi",
+      "Type": "Physical Product",
+      "Status": "Building",
+      "Price": 77,
+      "Platform": "Shopify",
+      "Description": "AS-LAK tiilikattomaali 10L. Private label. Landed cost 3.40€/L → myyntihinta 7.70€/L.",
+      "Target_Audience": "Kattoalan ammattilaiset, taloyhtiöt, rakennuttajat"
+    },
+    {
+      "Name": "Drone Kuntotarkastus + Huoltosuunnitelma",
+      "Type": "Service Package",
+      "Status": "Idea",
+      "Price": 149,
+      "Platform": "Direct",
+      "Description": "HIANO uusi palvelu: drone-kuvauskäynti + AI-kuntoraportti + tarjous huollosta. Marginaali 50-70%. Myydään ennen huoltotyötä.",
+      "Target_Audience": "Omakotitalonomistajat, taloyhtiöt Satakunnassa"
+    }
+  ]
+}

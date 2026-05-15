@@ -1,0 +1,114 @@
+{
+  "name": "J4P Legal Cases",
+  "description": "Oikeusprosessin, vakuutusten ja viranomaisasioiden seuranta",
+  "properties": {
+    "Title": { "type": "title" },
+    "Type": {
+      "type": "select",
+      "options": ["Criminal", "Insurance", "Medical", "KELA", "Ilmarinen", "Civil", "Regulatory"]
+    },
+    "Status": {
+      "type": "select",
+      "options": [
+        { "name": "Pending", "color": "gray" },
+        { "name": "Active", "color": "blue" },
+        { "name": "Waiting_for_Document", "color": "yellow" },
+        { "name": "Appealing", "color": "orange" },
+        { "name": "Resolved", "color": "green" },
+        { "name": "Rejected", "color": "red" }
+      ]
+    },
+    "Priority": {
+      "type": "select",
+      "options": [
+        { "name": "Critical", "color": "red" },
+        { "name": "High", "color": "orange" },
+        { "name": "Medium", "color": "yellow" },
+        { "name": "Low", "color": "gray" }
+      ]
+    },
+    "Deadline": { "type": "date" },
+    "Amount_Claimed": { "type": "number", "format": "euro" },
+    "Amount_Received": { "type": "number", "format": "euro" },
+    "Responsible_Party": { "type": "rich_text" },
+    "Lawyer_Action_Required": { "type": "checkbox" },
+    "Next_Action": { "type": "rich_text" },
+    "Notes": { "type": "rich_text" }
+  },
+  "seed_data": [
+    {
+      "Title": "Satakunnan sairaala — potilastietojen oikaisu (päihdediagnoosi)",
+      "Type": "Medical",
+      "Status": "Active",
+      "Priority": "Critical",
+      "Responsible_Party": "Asianajaja / RIKU",
+      "Lawyer_Action_Required": true,
+      "Next_Action": "Kirjallinen muistutus + potilastietojen oikaisuvaatimus (Laki potilaan asemasta 10 §). Verenohennuslääkitys selittää mustelmat. Negatiiviset huumeseulat kumoavat olettaman.",
+      "Notes": "KRIITTINEN: Virheellinen kirjaus voi evätä vakuutuskorvaukset ja Rikosvahinkolain korvaukset myötävaikutuksen perusteella."
+    },
+    {
+      "Title": "Rikosvahinkokorvaus — Valtiokonttori (Rikosvahinkolaki)",
+      "Type": "Criminal",
+      "Status": "Active",
+      "Priority": "Critical",
+      "Amount_Claimed": 45500,
+      "Responsible_Party": "Asianajaja + Valtiokonttori",
+      "Lawyer_Action_Required": true,
+      "Next_Action": "Asianajajan kautta hakemus Valtiokonttorille. Komponentit: kipu/särky (max 12k€), kärsimys (3.5k€), pysyvä haitta (TBD neuropsykologi 6-12kk), ansionmenetys.",
+      "Notes": "Ansionmenetys: osoitettava 3500-5000€/kk nettotulotaso. Kattaa erotuksen Ilmarisen 1740€ ja todellisen tason välillä."
+    },
+    {
+      "Title": "POP Oikeusturvavakuutus — aktivointi asianajokuluihin",
+      "Type": "Insurance",
+      "Status": "Active",
+      "Priority": "Critical",
+      "Amount_Claimed": 15000,
+      "Responsible_Party": "POP Vakuutus + Asianajaja",
+      "Lawyer_Action_Required": true,
+      "Next_Action": "Ilmoita POP Vakuutukselle oikeusturvavakuutuksen aktivoinnista. Kattaa asianajokulut 10000-20000€ (omavastuu 15-20%).",
+      "Notes": "POP Kotivakuutus (Laaja) sisältää oikeusturvavakuutuksen."
+    },
+    {
+      "Title": "Ilmarinen — kuntoutustuki jatko B-lausunto",
+      "Type": "Ilmarinen",
+      "Status": "Active",
+      "Priority": "Critical",
+      "Amount_Claimed": 1740,
+      "Responsible_Party": "Psykiatri / Neurologi",
+      "Lawyer_Action_Required": false,
+      "Next_Action": "Psykiatrin tai neurologin uusi laaja B-lausunto. Eriteltävä uusi diagnoosi (F43.1 PTSD + mahdollinen aivovamma). Ilmarinen jatkaa tukea 1740€/kk brutto vähintään 2027 syksyyn.",
+      "Notes": "Nykyinen tuki voimassa 30.9.2026. Uusi rikos nollaa edellisen kuntoutumisen — oikeus jatkoon on vahva."
+    },
+    {
+      "Title": "Fennia Laajakasko — auto-ilkivalta/turmeleminen",
+      "Type": "Insurance",
+      "Status": "Active",
+      "Priority": "High",
+      "Responsible_Party": "Fennia + Asianajaja",
+      "Lawyer_Action_Required": true,
+      "Next_Action": "Ilmoita Fennia Laajaskaskolle ilkivaltavahingosta. Jos auto on liiketoiminnan edellytys, vaadi sijaisauton kulut tai ansionmenetys seisonta-ajalta.",
+      "Notes": "Kymmenien tuhansien eurojen korjaukset mahdollisia."
+    },
+    {
+      "Title": "Kelan vammaistukihakemus",
+      "Type": "KELA",
+      "Status": "Active",
+      "Priority": "High",
+      "Amount_Claimed": 3600,
+      "Responsible_Party": "Kela",
+      "Lawyer_Action_Required": false,
+      "Next_Action": "Hae Kelan 16v täyttäneen vammaistukea (korotettu 257.82€/kk tai ylin 499.93€/kk). Tarve toisen henkilön apuun (äiti) perusarjessa täyttää kriteerit.",
+      "Notes": "2026 tasot: Perus 110.49€/kk, Korotettu 257.82€/kk, Ylin 499.93€/kk."
+    },
+    {
+      "Title": "IF Ryhmävakuutus / MMA & Pro liitot — tapaturmakorvaukset",
+      "Type": "Insurance",
+      "Status": "Pending",
+      "Priority": "Medium",
+      "Responsible_Party": "Asianajaja + IF",
+      "Lawyer_Action_Required": true,
+      "Next_Action": "Tarkista juristin kanssa liittovakuutusten sisältämät tapaturma- ja päivärahakorvaukset.",
+      "Notes": "MMA & Pro -jäsenliitojen vakuutukset tarkistettava."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "J4P Ideas",
+  "description": "Ideapankki — Dabrowski-lifecycle + Kill Score automaattinen karsinta",
+  "properties": {
+    "Title": { "type": "title" },
+    "Area": { "type": "rich_text", "note": "Relation to Areas DB" },
+    "Lifecycle": {
+      "type": "select",
+      "options": [
+        { "name": "Seedling", "color": "green", "note": "Uusi idea, ei validointia" },
+        { "name": "Growing", "color": "blue", "note": "Validoitu, työstetään" },
+        { "name": "Ripe", "color": "yellow", "note": "Valmis toteutettavaksi" },
+        { "name": "Archived", "color": "gray", "note": "Kill Score > 70 tai manuaalisesti arkistoitu" }
+      ]
+    },
+    "Energy_Required": {
+      "type": "select",
+      "options": ["Low", "Medium", "High", "Hyperfocus"]
+    },
+    "Kill_Score": {
+      "type": "formula",
+      "expression": "round((dateBetween(now(), prop(\"Created\"), \"days\") * 0.4) + (if(empty(prop(\"Last_Activity\")), 30, dateBetween(now(), prop(\"Last_Activity\"), \"days\")) * 0.35) + (if(prop(\"Lifecycle\") == \"Seedling\", 20, if(prop(\"Lifecycle\") == \"Growing\", 10, 0)) * 0.25))"
+    },
+    "Archive_Candidate": {
+      "type": "formula",
+      "expression": "prop(\"Kill_Score\") > 70"
+    },
+    "Created": { "type": "created_time" },
+    "Last_Activity": { "type": "date" },
+    "Notes": { "type": "rich_text" },
+    "Revenue_Potential": {
+      "type": "select",
+      "options": ["< 1k€", "1-10k€", "10-100k€", "> 100k€", "Recurring"]
+    }
+  },
+  "kill_score_logic": {
+    "description": "Idea joka on vanha JA jota ei ole työstetty → automaattinen arkistointi",
+    "threshold": 70,
+    "factors": {
+      "age": "40% painoarvo — kuinka vanha idea on (päivissä)",
+      "inactivity": "35% painoarvo — kuinka kauan sitten viimeksi käsitelty",
+      "lifecycle_penalty": "25% painoarvo — Seedling +20, Growing +10, Ripe +0"
+    },
+    "action": "Archive_Candidate = true → n8n ehdottaa arkistointia Telegramissa"
+  }
+}

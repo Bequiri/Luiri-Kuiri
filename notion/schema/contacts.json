@@ -1,0 +1,51 @@
+{
+  "name": "J4P Contacts",
+  "description": "Kontaktit — toxic filter valmiiksi konfiguroitu",
+  "properties": {
+    "Name": { "type": "title" },
+    "Role": { "type": "rich_text" },
+    "Toxic_Level": {
+      "type": "select",
+      "options": [
+        { "name": "None", "color": "green" },
+        { "name": "Yellow", "color": "yellow" },
+        { "name": "Red", "color": "red" }
+      ]
+    },
+    "No_Contact": { "type": "checkbox" },
+    "Last_Contact": { "type": "date" },
+    "Phone": { "type": "phone_number" },
+    "Email": { "type": "email" },
+    "Notes": { "type": "rich_text" }
+  },
+  "seed_data": [
+    {
+      "Name": "Jenna",
+      "Role": "EX — narsistinen kumppani",
+      "Toxic_Level": "Red",
+      "No_Contact": true,
+      "Notes": "EHDOTON NO CONTACT. Triangulaatio + psykologinen väkivalta. Minkä tahansa kontaktin saa triage-agentti → välitön Telegram-hälytys."
+    },
+    {
+      "Name": "Juuso",
+      "Role": "Entinen ystävä — triangulaatioon osallistunut",
+      "Toxic_Level": "Red",
+      "No_Contact": true,
+      "Notes": "EHDOTON NO CONTACT. Petosketju Jennan kanssa. Kaikki yhteydenotot blokattava."
+    },
+    {
+      "Name": "AKSIL (yhteyshenkilö)",
+      "Role": "Valmistaja — Export Manager",
+      "Toxic_Level": "None",
+      "No_Contact": false,
+      "Notes": "Puolalainen valmistaja. LOI neuvottelu käynnissä. 48h vasteaika tekniseen tukeen."
+    },
+    {
+      "Name": "Äiti",
+      "Role": "Tukihenkilö — hallinnoi juoksevia asioita",
+      "Toxic_Level": "None",
+      "No_Contact": false,
+      "Notes": "Valtuutettu hoitamaan laskut, postit (OmaPosti, Suomi.fi) kuntoutusaikana."
+    }
+  ]
+}

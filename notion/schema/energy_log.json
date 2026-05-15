@@ -1,0 +1,40 @@
+{
+  "name": "J4P Energy Log",
+  "description": "Päivittäinen biometrinen lokikirja — HRV + vireystila + recovery-tila",
+  "properties": {
+    "Date": { "type": "date" },
+    "HRV_Score": { "type": "number", "note": "Oura ring RMSSD (ms)" },
+    "Readiness_Score": { "type": "number", "note": "Oura readiness 0-100" },
+    "Sleep_Score": { "type": "number", "note": "Oura sleep score 0-100" },
+    "Energy_Level_Self": { "type": "number", "note": "Itsearviotu 1-10" },
+    "Fatigue_Detected": { "type": "checkbox" },
+    "Recovery_Block_Active": { "type": "checkbox" },
+    "Notion_Entries_Created": { "type": "number" },
+    "Sentiment": {
+      "type": "select",
+      "options": [
+        { "name": "Positive", "color": "green" },
+        { "name": "Neutral", "color": "gray" },
+        { "name": "Negative", "color": "yellow" },
+        { "name": "Distress", "color": "red" }
+      ]
+    },
+    "Voice_Summary": { "type": "rich_text", "note": "Gemini/Claude tiivistelmä ääniviestistä" },
+    "Medication_Taken": { "type": "checkbox" },
+    "Physical_Activity": { "type": "rich_text" },
+    "Notes": { "type": "rich_text" }
+  },
+  "thresholds": {
+    "recovery_block_triggers": [
+      "readiness < 60",
+      "HRV < (7-day average - 10%)",
+      "sleep_score < 65",
+      "self_reported energy < 4"
+    ],
+    "hyperfocus_allowed": [
+      "readiness >= 75",
+      "HRV >= 7-day average",
+      "self_reported energy >= 7"
+    ]
+  }
+}

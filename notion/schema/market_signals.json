@@ -1,0 +1,30 @@
+{
+  "name": "J4P Market Signals",
+  "description": "Päivittäinen trenditietovarasto — automaattinen markkina-älykkyysjärjestelmä",
+  "properties": {
+    "Date": { "type": "date" },
+    "Signal_Source": {
+      "type": "select",
+      "options": ["Google Trends", "Reddit", "Product Hunt", "HackerNews", "GitHub Trending", "Instagram", "LinkedIn", "RSS"]
+    },
+    "Topic": { "type": "title" },
+    "Relevance_Score": { "type": "number", "note": "1-10, Gemini-arvioitu" },
+    "Action_Required": { "type": "checkbox" },
+    "Opportunity_Type": {
+      "type": "select",
+      "options": ["Digital Product", "Client Lead", "Content Idea", "Business Model", "Tech Tool", "Partnership", "Competitor Intel"]
+    },
+    "Summary": { "type": "rich_text" },
+    "Gemini_Analysis": { "type": "rich_text" },
+    "Business_Line": {
+      "type": "select",
+      "options": ["HIANO", "AKSIL Pinnoitteet", "J4P Digikauppa", "Masan Pressu", "Kaikki"]
+    }
+  },
+  "automation": {
+    "source": "n8n market_intelligence_digest.json",
+    "schedule": "07:00 päivittäin",
+    "sources": ["pytrends", "PRAW Reddit", "Product Hunt Apify", "HN Algolia", "GitHub API"],
+    "analysis_prompt": "Analysoi data AuDHD-yrittäjän näkökulmasta. Tunnista: 1) Trendaavat digimarkkinat joissa voi myydä n8n/Notion-malleja 2) Niche-markkinat Suomessa (pressu, kattohuolto) 3) Killer idea tänään — yksi konkreettinen toimenpide"
+  }
+}

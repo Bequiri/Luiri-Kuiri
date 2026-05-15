@@ -1,0 +1,27 @@
+{
+  "name": "J4P Areas",
+  "description": "Elämänalueet — Dabrowski Tason V mukaiset kategoriat",
+  "properties": {
+    "Name": { "type": "title" },
+    "Type": {
+      "type": "select",
+      "options": ["Business", "Health", "Legal", "Personal", "Learning"]
+    },
+    "Active": { "type": "checkbox" },
+    "Energy_Level": {
+      "type": "select",
+      "options": ["Critical", "High", "Medium", "Low", "Dormant"]
+    },
+    "Notes": { "type": "rich_text" }
+  },
+  "seed_data": [
+    { "Name": "HIANO Kattohuolto", "Type": "Business", "Active": true, "Energy_Level": "High" },
+    { "Name": "PEKINVEST Pinnoitteet (AKSIL)", "Type": "Business", "Active": true, "Energy_Level": "High" },
+    { "Name": "J4P Second Brain", "Type": "Personal", "Active": true, "Energy_Level": "Critical" },
+    { "Name": "Digitaalisten Tuotteiden Myynti", "Type": "Business", "Active": true, "Energy_Level": "Medium" },
+    { "Name": "Masan Pressu Perheyhtiö", "Type": "Business", "Active": true, "Energy_Level": "Medium" },
+    { "Name": "Terveys & Kuntoutus", "Type": "Health", "Active": true, "Energy_Level": "Critical" },
+    { "Name": "Oikeusprosessi & Vakuutukset", "Type": "Legal", "Active": true, "Energy_Level": "Critical" },
+    { "Name": "PSNOYAB (Partly Sunny & Nice)", "Type": "Business", "Active": true, "Energy_Level": "Low" }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "J4P Companies",
+  "description": "Yritysrakenne — PEKINVEST holding ja tytäryhtiöt",
+  "properties": {
+    "Name": { "type": "title" },
+    "Legal_Entity": { "type": "rich_text" },
+    "Status": {
+      "type": "select",
+      "options": ["Active", "Dormant", "Planned", "Archived"]
+    },
+    "Revenue_MTD": { "type": "number", "format": "euro" },
+    "Revenue_YTD": { "type": "number", "format": "euro" },
+    "Target_Monthly": { "type": "number", "format": "euro" },
+    "Industry": { "type": "rich_text" },
+    "Notes": { "type": "rich_text" }
+  },
+  "seed_data": [
+    {
+      "Name": "PEKINVEST OY",
+      "Legal_Entity": "Osakeyhtiö, Pori",
+      "Status": "Active",
+      "Industry": "Holding / Pinnoitteet / Kattohuolto",
+      "Notes": "Pääholding-yhtiö. Y-tunnus täytettävä. Asiakkaalle näkyy 'Pekinvest Oy'."
+    },
+    {
+      "Name": "HIANO Kattohuolto",
+      "Legal_Entity": "Pekinvest Oy aputoiminimi",
+      "Status": "Active",
+      "Industry": "Kattohuolto, -pesu, -pinnoitus, räntien puhdistus",
+      "Notes": "Brändi: IHAN HIANO. Domain: ihanhiano.fi. Geo: Satakunta (Pori/Rauma/Turku)"
+    },
+    {
+      "Name": "AKSIL-Jakelu (Pohjoismaat & Baltia)",
+      "Legal_Entity": "Pekinvest Oy jakelulinja",
+      "Status": "Active",
+      "Industry": "Kattopinnoitteiden tuonti ja jakelu. Private label AS-LAK, AKSIKOR, SIL-FAS",
+      "Notes": "LOI: PEKINVEST-LOI-2026-001. Markkinat: FI, EE, SE heti; LV, LT 6kk; NO, DK optio."
+    },
+    {
+      "Name": "Partly Sunny & Nice Oy Ab (PSNOYAB)",
+      "Legal_Entity": "Osakeyhtiö",
+      "Status": "Active",
+      "Industry": "Kosmetiikka, lifestyle-brändit",
+      "Notes": "EI NÄY asiakaspinnassa. Sisäinen yhtiörakenne. Status Quo Ante -brändi."
+    },
+    {
+      "Name": "Masan Pressu Perheyhtiö",
+      "Legal_Entity": "Tarkistettava",
+      "Status": "Planned",
+      "Industry": "Pressut, kuomat, suojapeitteet — verkkokauppa + B2B",
+      "Notes": "Shopify-verkkokauppa. Perheyhtiö, työllistää. Räätälöidyt pressut."
+    },
+    {
+      "Name": "J4P Digital Products",
+      "Legal_Entity": "Pekinvest Oy / PSNOYAB",
+      "Status": "Active",
+      "Industry": "Notion-mallit, n8n workflows, AI-promptit",
+      "Notes": "Lemon Squeezy. Passiivinen tulo. Myydään AuDHD-yrittäjille ja agencioille."
+    },
+    {
+      "Name": "Wilborg Oy",
+      "Legal_Entity": "Osakeyhtiö",
+      "Status": "Dormant",
+      "Industry": "Tarkistettava",
+      "Notes": "Älä tee päätöksiä toistaiseksi (kuntoutusaika)."
+    }
+  ]
+}
