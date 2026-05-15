@@ -1,0 +1,188 @@
+{
+  "name": "J4P — Tiedustelija (Market Intelligence 06:00)",
+  "meta": {
+    "description": "Päivittäinen markkina-analyysi. Kerää Google Trends + Reddit + HN + GitHub. Analysoi Gemini Flashilla. Raportoi Komentajalle + Kauppiaalle."
+  },
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Ajastin 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      },
+      "position": [100, 300]
+    },
+    {
+      "id": "hn-api",
+      "name": "HackerNews Algolia (ilmainen)",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://hn.algolia.com/api/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "tags", "value": "show_hn,ask_hn" },
+            { "name": "hitsPerPage", "value": "10" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [300, 200]
+    },
+    {
+      "id": "github-trending",
+      "name": "GitHub Trending Python",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "https://gh-trending-api.waningflow.com/repositories",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "language", "value": "python" },
+            { "name": "since", "value": "daily" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [300, 400]
+    },
+    {
+      "id": "product-hunt",
+      "name": "Product Hunt Top 5",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.producthunt.com/v2/api/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.PRODUCT_HUNT_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "{\"query\":\"{ posts(order: VOTES, first: 5) { edges { node { name tagline votesCount } } } }\"}"
+      },
+      "continueOnFail": true,
+      "position": [300, 600]
+    },
+    {
+      "id": "gemini-analyze",
+      "name": "Gemini Flash — Markkina-analyysi",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [{ "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"parts\":[{\"text\":\"MARKKINA-ANALYYSI {{ new Date().toISOString().split('T')[0] }}\\n\\nHN: {{ JSON.stringify($node['HackerNews Algolia (ilmainen)'].json?.hits?.slice(0,5).map(h => h.title) || []) }}\\nGitHub trending: {{ JSON.stringify($node['GitHub Trending Python'].json?.slice(0,5).map(r => r.name + ': ' + r.description) || []) }}\\nProduct Hunt: {{ JSON.stringify($node['Product Hunt Top 5'].json?.data?.posts?.edges?.slice(0,5).map(e => e.node.name + ' - ' + e.node.tagline) || []) }}\\n\\nAnalysoi liiketoimintamahdollisuudet: HIANO Kattohuolto (Satakunta), AKSIL pinnoitteet (Pohjoismaat), J4P Digikauppa (n8n/Notion mallit), Masan Pressu (verkkokauppa). Tunnista TOP 3 toimenpidettä tänään. Suomi, max 10 lausetta, bullet-lista.\"}]}]"
+            },
+            {
+              "name": "systemInstruction",
+              "value": "{\"parts\":[{\"text\":\"Olet J4P Tiedustelija. Vastaa suomeksi, bullet-lista, max 10 lausetta. Priorisoi konkreettiset myyntimahdollisuudet.\"}]}"
+            }
+          ]
+        }
+      },
+      "position": [600, 400]
+    },
+    {
+      "id": "notion-signal",
+      "name": "Notion — Market Signal",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_MARKET_SIGNALS_DB_ID }}",
+        "title": "=Scout {{ $now.format('YYYY-MM-DD') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "Signal_Source", "type": "select", "selectValue": "HN+GitHub+ProductHunt" },
+            { "key": "Opportunity_Type", "type": "select", "selectValue": "Digital Product" },
+            { "key": "Action_Required", "type": "checkbox", "checkboxValue": true },
+            { "key": "Summary", "type": "rich_text", "textContent": "={{ $json.candidates?.[0]?.content?.parts?.[0]?.text }}" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [800, 400]
+    },
+    {
+      "id": "notify-commander",
+      "name": "Agent Comms — Komentajalle",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_AGENT_COMMS_DB_ID }}",
+        "title": "=Tiedustelija → Komentaja {{ $now.format('YYYY-MM-DD') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "From_Agent", "type": "select", "selectValue": "scout" },
+            { "key": "To_Agent", "type": "select", "selectValue": "commander" },
+            { "key": "Message_Type", "type": "select", "selectValue": "Report" },
+            { "key": "Priority", "type": "select", "selectValue": "Normal" },
+            { "key": "Status", "type": "select", "selectValue": "Pending" },
+            { "key": "Content", "type": "rich_text", "textContent": "={{ $node['Gemini Flash — Markkina-analyysi'].json.candidates?.[0]?.content?.parts?.[0]?.text }}" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [800, 250]
+    },
+    {
+      "id": "notify-merchant",
+      "name": "Agent Comms — Kauppiaalle",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_AGENT_COMMS_DB_ID }}",
+        "title": "=Tiedustelija → Kauppias {{ $now.format('YYYY-MM-DD') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "From_Agent", "type": "select", "selectValue": "scout" },
+            { "key": "To_Agent", "type": "select", "selectValue": "merchant" },
+            { "key": "Message_Type", "type": "select", "selectValue": "Task" },
+            { "key": "Priority", "type": "select", "selectValue": "High" },
+            { "key": "Status", "type": "select", "selectValue": "Pending" },
+            { "key": "Content", "type": "rich_text", "textContent": "=Uusi markkinasignaali: harkitse uuden digikauppatuotteen luomista. Data: {{ $node['Gemini Flash — Markkina-analyysi'].json.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0, 500) }}" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [800, 550]
+    }
+  ],
+  "connections": {
+    "Ajastin 06:00": {
+      "main": [[
+        { "node": "HackerNews Algolia (ilmainen)", "type": "main", "index": 0 },
+        { "node": "GitHub Trending Python", "type": "main", "index": 0 },
+        { "node": "Product Hunt Top 5", "type": "main", "index": 0 }
+      ]]
+    },
+    "HackerNews Algolia (ilmainen)": {
+      "main": [[ { "node": "Gemini Flash — Markkina-analyysi", "type": "main", "index": 0 } ]]
+    },
+    "Gemini Flash — Markkina-analyysi": {
+      "main": [[
+        { "node": "Notion — Market Signal", "type": "main", "index": 0 },
+        { "node": "Agent Comms — Komentajalle", "type": "main", "index": 0 },
+        { "node": "Agent Comms — Kauppiaalle", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": false,
+  "settings": { "timezone": "Europe/Helsinki" },
+  "tags": ["j4p", "agent-army", "scout", "market-intelligence"]
+}

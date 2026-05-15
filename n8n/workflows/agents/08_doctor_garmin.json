@@ -1,0 +1,196 @@
+{
+  "name": "J4P — Lääkäri (Garmin HRV + Recovery Guard)",
+  "meta": {
+    "description": "Aamuinen biometrinen raportti Garmin-kellosta. Body Battery -ohjattu palautumisblokki tai hyperfokuslupa."
+  },
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Ajastin 07:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "30 7 * * *" }]
+        }
+      },
+      "position": [100, 300]
+    },
+    {
+      "id": "garmin-api",
+      "name": "Garmin Local API",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:8000/biometrics/today",
+        "options": { "timeout": 8000 }
+      },
+      "continueOnFail": true,
+      "position": [300, 300]
+    },
+    {
+      "id": "assess-recovery",
+      "name": "Arvioi palautumistila",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "const data = items[0].json;\nconst bb = data.body_battery ?? null;\nconst hrv = (data.hrv_status || '').toLowerCase();\nconst sleep = data.sleep_score ?? null;\n\nlet recoveryBlock = false;\nlet reasons = [];\n\nif (bb !== null && bb < 40) {\n  recoveryBlock = true;\n  reasons.push(`Body Battery ${bb}/100 < 40`);\n}\nif (hrv === 'poor') {\n  recoveryBlock = true;\n  reasons.push(`HRV Status: ${hrv}`);\n}\nif (sleep !== null && sleep < 60) {\n  reasons.push(`Uni ${sleep}/100 (varoitus)`);\n}\n\nconst hyperfocusOk = bb !== null && bb >= 75 && hrv !== 'poor';\n\nreturn [{\n  json: {\n    body_battery: bb,\n    hrv_status: hrv || 'unknown',\n    sleep_score: sleep,\n    recovery_block: recoveryBlock,\n    hyperfocus_ok: hyperfocusOk,\n    reasons: reasons,\n    date: new Date().toISOString().split('T')[0]\n  }\n}];"
+      },
+      "position": [500, 300]
+    },
+    {
+      "id": "route-recovery",
+      "name": "Palautumisblokki vai vapaus?",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.recovery_block }}", "value2": true }]
+        }
+      },
+      "position": [700, 300]
+    },
+    {
+      "id": "notion-energy-log",
+      "name": "Kirjaa Notion Energy Log",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_ENERGY_DB_ID }}",
+        "title": "=Garmin {{ $json.date }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "HRV_Score", "type": "number", "numberValue": "={{ $json.body_battery }}" },
+            { "key": "Fatigue_Detected", "type": "checkbox", "checkboxValue": "={{ $json.recovery_block }}" },
+            { "key": "Recovery_Block", "type": "checkbox", "checkboxValue": "={{ $json.recovery_block }}" },
+            { "key": "Sentiment", "type": "select", "selectValue": "={{ $json.recovery_block ? 'Negative' : 'Positive' }}" }
+          ]
+        }
+      },
+      "position": [900, 200]
+    },
+    {
+      "id": "clear-calendar",
+      "name": "Tyhjennä kalenteri (ei-kriittiset)",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_URL }}/calendar-recovery-block",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "date", "value": "={{ $json.date }}" },
+            { "name": "reason", "value": "={{ $json.reasons.join(', ') }}" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [900, 350]
+    },
+    {
+      "id": "telegram-recovery",
+      "name": "Telegram — Palautumisblokki",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=🔴 *Lääkäri: Palautumisblokki aktiivinen*\n\n🔋 Body Battery: {{ $json.body_battery || 'N/A' }}/100\n💓 HRV: {{ $json.hrv_status }}\n😴 Uni: {{ $json.sleep_score || 'N/A' }}/100\n\n⚠️ Syy: {{ $json.reasons.join(' | ') }}\n\n✅ Kalenteri tyhjennetty. Uudet projektit jäädytetty.\n💡 Komennot: /focus näyttää mitä voi tehdä pienellä energialla.",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "position": [1100, 350]
+    },
+    {
+      "id": "notify-agents-recovery",
+      "name": "Agentit — Kapasiteetti matala",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_URL }}/agent-comms",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "from_agent", "value": "doctor" },
+            { "name": "to_agent", "value": "commander" },
+            { "name": "message_type", "value": "Alert" },
+            { "name": "priority", "value": "Critical" },
+            { "name": "content", "value": "=Recovery block aktiivinen. Body Battery: {{ $json.body_battery }}. Kaikki uudet tehtävät blokattu tänään." }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [1100, 500]
+    },
+    {
+      "id": "telegram-hyperfocus",
+      "name": "Telegram — Hyperfokusvapaus",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=🟢 *Lääkäri: Korkea vireystila*\n\n🔋 Body Battery: {{ $json.body_battery }}/100\n💓 HRV: {{ $json.hrv_status }}\n😴 Uni: {{ $json.sleep_score || 'N/A' }}/100\n\n⚡ Hyperfokusvapaus aktiivinen.\n🎯 Tänään: syvä luova työ sallittu. Dabrowski Taso V!",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "position": [900, 500]
+    },
+    {
+      "id": "notify-agents-high",
+      "name": "Agentit — Kapasiteetti max",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_URL }}/agent-comms",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "from_agent", "value": "doctor" },
+            { "name": "to_agent", "value": "merchant" },
+            { "name": "message_type", "value": "Report" },
+            { "name": "priority", "value": "Normal" },
+            { "name": "content", "value": "=Kapasiteetti max. Body Battery {{ $json.body_battery }}. Kauppias: priorisoi korkean arvon tehtävät tänään." }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [1100, 450]
+    },
+    {
+      "id": "garmin-unavailable",
+      "name": "Telegram — Garmin ei saatavilla",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "⚠️ *Lääkäri:* Garmin-data ei saatavilla.\n\nSyötä manuaalisesti: `/health BODY_BATTERY [HRV_STATUS] [SLEEP]`\nEsim: `/health 65 good 72`\n\nHRV-statukset: poor | balanced | good | prime",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "position": [500, 500]
+    }
+  ],
+  "connections": {
+    "Ajastin 07:30": {
+      "main": [[ { "node": "Garmin Local API", "type": "main", "index": 0 } ]]
+    },
+    "Garmin Local API": {
+      "main": [[ { "node": "Arvioi palautumistila", "type": "main", "index": 0 } ]]
+    },
+    "Arvioi palautumistila": {
+      "main": [[ { "node": "Palautumisblokki vai vapaus?", "type": "main", "index": 0 } ]]
+    },
+    "Palautumisblokki vai vapaus?": {
+      "main": [
+        [
+          { "node": "Kirjaa Notion Energy Log", "type": "main", "index": 0 },
+          { "node": "Tyhjennä kalenteri (ei-kriittiset)", "type": "main", "index": 0 },
+          { "node": "Telegram — Palautumisblokki", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Kirjaa Notion Energy Log", "type": "main", "index": 0 },
+          { "node": "Telegram — Hyperfokusvapaus", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Telegram — Palautumisblokki": {
+      "main": [[ { "node": "Agentit — Kapasiteetti matala", "type": "main", "index": 0 } ]]
+    },
+    "Telegram — Hyperfokusvapaus": {
+      "main": [[ { "node": "Agentit — Kapasiteetti max", "type": "main", "index": 0 } ]]
+    }
+  },
+  "active": false,
+  "settings": { "timezone": "Europe/Helsinki" },
+  "tags": ["j4p", "agent-army", "doctor", "garmin", "recovery"]
+}

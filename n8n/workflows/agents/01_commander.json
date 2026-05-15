@@ -1,0 +1,123 @@
+{
+  "name": "J4P — Komentaja (AI Agent Army Commander)",
+  "meta": {
+    "description": "Pääagentti. Käsittelee Telegram-komennot ja reitittää muille agenteille. Päivittäinen aamuraportti 08:00."
+  },
+  "nodes": [
+    {
+      "id": "schedule-morning",
+      "name": "Aamuraportti 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }]
+        }
+      },
+      "position": [100, 200]
+    },
+    {
+      "id": "fetch-all-status",
+      "name": "Hae kaikkien agenttien tila",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "getAll",
+        "databaseId": "={{ $env.NOTION_AGENT_COMMS_DB_ID }}",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "select_equals",
+              "value": "Pending"
+            },
+            {
+              "key": "Created_Time|created_time",
+              "condition": "date_on_or_after",
+              "date": "={{ new Date(Date.now() - 24*60*60*1000).toISOString() }}"
+            }
+          ]
+        },
+        "limit": 20
+      },
+      "continueOnFail": true,
+      "position": [300, 200]
+    },
+    {
+      "id": "morning-brief-gemini",
+      "name": "Gemini — Aamubriefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [{ "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"parts\":[{\"text\":\"Agenttien viestit 24h:\\n{{ JSON.stringify($json) }}\\n\\nAnna Jonille aamubriefing: top 3 prioriteettia tänään, mitä agenteilla on vireillä.\"}]}]"
+            },
+            {
+              "name": "systemInstruction",
+              "value": "{\"parts\":[{\"text\":\"Olet J4P Komentaja. Vastaa suomeksi, max 5 lausetta. AuDHD-ystävällinen: bullet-lista, ei pitkiä selityksiä.\"}]}"
+            }
+          ]
+        }
+      },
+      "position": [500, 200]
+    },
+    {
+      "id": "send-morning-brief",
+      "name": "Telegram — Aamubriefing",
+      "type": "n8n-nodes-base.telegram",
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=🤖 *J4P Komentaja — Aamubriefing*\n\n{{ $json.candidates?.[0]?.content?.parts?.[0]?.text }}\n\n💡 Komennot: /status /focus /money /legal /market /build /health",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "position": [700, 200]
+    },
+    {
+      "id": "write-agent-comms",
+      "name": "Kirjaa agent_comms Notioniin",
+      "type": "n8n-nodes-base.notion",
+      "parameters": {
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_AGENT_COMMS_DB_ID }}",
+        "title": "=Commander Aamubriefing {{ $now.format('YYYY-MM-DD') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "From_Agent", "type": "select", "selectValue": "commander" },
+            { "key": "To_Agent", "type": "select", "selectValue": "all" },
+            { "key": "Message_Type", "type": "select", "selectValue": "Report" },
+            { "key": "Priority", "type": "select", "selectValue": "Normal" },
+            { "key": "Status", "type": "select", "selectValue": "Read" },
+            { "key": "Content", "type": "rich_text", "textContent": "={{ $node['Telegram — Aamubriefing'].json.text || 'Aamubriefing lähetetty' }}" }
+          ]
+        }
+      },
+      "continueOnFail": true,
+      "position": [700, 400]
+    }
+  ],
+  "connections": {
+    "Aamuraportti 08:00": {
+      "main": [[ { "node": "Hae kaikkien agenttien tila", "type": "main", "index": 0 } ]]
+    },
+    "Hae kaikkien agenttien tila": {
+      "main": [[ { "node": "Gemini — Aamubriefing", "type": "main", "index": 0 } ]]
+    },
+    "Gemini — Aamubriefing": {
+      "main": [
+        [ { "node": "Telegram — Aamubriefing", "type": "main", "index": 0 } ],
+        [ { "node": "Kirjaa agent_comms Notioniin", "type": "main", "index": 0 } ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "timezone": "Europe/Helsinki" },
+  "tags": ["j4p", "agent-army", "commander"]
+}

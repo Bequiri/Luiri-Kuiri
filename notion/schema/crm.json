@@ -1,0 +1,40 @@
+{
+  "name": "J4P CRM",
+  "description": "Myyntiputki kaikille liiketoiminnoille — HIANO, AKSIL, Masan Pressu, Digikauppa",
+  "properties": {
+    "Title": { "type": "title" },
+    "Company": { "type": "rich_text", "note": "Relation to Companies DB" },
+    "Contact": { "type": "rich_text", "note": "Relation to Contacts DB" },
+    "Business_Line": {
+      "type": "select",
+      "options": ["HIANO Kattohuolto", "AKSIL Pinnoitteet", "Masan Pressu", "Digikauppa", "Konsultointi", "Muu"]
+    },
+    "Status": {
+      "type": "select",
+      "options": [
+        { "name": "New Lead", "color": "blue" },
+        { "name": "Quoted", "color": "yellow" },
+        { "name": "Won", "color": "green" },
+        { "name": "Lost", "color": "red" },
+        { "name": "Invoiced", "color": "purple" },
+        { "name": "Paid", "color": "green" }
+      ]
+    },
+    "Value": { "type": "number", "format": "euro" },
+    "Quote_Date": { "type": "date" },
+    "Follow_Up": { "type": "date" },
+    "Source": {
+      "type": "select",
+      "options": ["Google Ads", "SEO", "Instagram", "Referral", "Cold", "n8n Form", "Shopify", "Lemon Squeezy"]
+    },
+    "Address": { "type": "rich_text", "note": "Asiakkaan osoite (HIANO-töihin)" },
+    "Roof_Area_m2": { "type": "number", "note": "HIANO: katon pinta-ala m²" },
+    "Notes": { "type": "rich_text" }
+  },
+  "automations": {
+    "hiano_lead": "n8n webhook → lomake → Notion (Status: New Lead) → Telegram + SMS Jonille",
+    "aksil_order": "Shopify webhook → Notion (Status: Won) → Visma lasku → DHL toimitus",
+    "digikauppa": "Lemon Squeezy webhook → Notion (Status: Paid) → onboarding email",
+    "follow_up": "Joka maanantai: hae kaikki Follow_Up tänään → Telegram digest"
+  }
+}
