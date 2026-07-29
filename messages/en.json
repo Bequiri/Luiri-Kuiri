@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "vehicle": "Vehicle",
+    "story": "Story",
+    "pricing": "Pricing",
+    "business": "For Business",
+    "contact": "Contact",
+    "book": "Book a ride"
+  },
+  "hero": {
+    "badge": "Satakunta's first premium executive transport concept",
+    "title": "Arrive in style — every time",
+    "subtitle": "Premium executive transfers in a Polestar 4 EV. Pori, Turku, Tampere, Helsinki — punctual, silent, elegant.",
+    "cta_book": "Book a ride",
+    "cta_pricing": "View pricing",
+    "scroll": "Scroll down"
+  },
+  "why": {
+    "title": "Why Northstar?",
+    "subtitle": "We're not a taxi. We're a premium experience.",
+    "card1_title": "Punctuality",
+    "card1_desc": "We track flights, traffic and timetables — you never wait. We do.",
+    "card2_title": "Luxury EV",
+    "card2_desc": "Polestar 4 — silent, spacious, zero-emission. Business-class feel on every trip.",
+    "card3_title": "Discreet service",
+    "card3_desc": "Named driver, confidentiality, professional conduct. Executive standard."
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "All fixed-price — no surprises",
+    "from": "from",
+    "enquire": "Request quote",
+    "book": "Book now"
+  },
+  "footer": {
+    "tagline": "Premium executive transfers in Satakunta.",
+    "rights": "All rights reserved.",
+    "links": "Links",
+    "contact": "Contact",
+    "privacy": "Privacy"
+  },
+  "booking": {
+    "title": "Book a ride",
+    "subtitle": "Fill in the details — we confirm within 1-2 hours",
+    "step1": "Service",
+    "step2": "Date & time",
+    "step3": "Extras",
+    "step4": "Your details",
+    "step5": "Summary",
+    "service_label": "Choose service",
+    "from_label": "Pick-up location",
+    "to_label": "Destination",
+    "date_label": "Date",
+    "time_label": "Time",
+    "extras_label": "Extras (all free unless priced)",
+    "name_label": "Full name",
+    "phone_label": "Phone",
+    "email_label": "Email",
+    "notes_label": "Special requests",
+    "deposit_info": "A booking deposit of €50 will be invoiced upon confirmation.",
+    "submit": "Send booking request",
+    "submitting": "Sending...",
+    "success_title": "Booking request received!",
+    "success_msg": "We'll confirm your booking within 1-2 hours. Check your email.",
+    "next": "Next",
+    "prev": "Previous"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "The fastest way to reach us is WhatsApp or phone.",
+    "form_title": "Send a message",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send",
+    "sending": "Sending...",
+    "sent": "Message sent!",
+    "whatsapp": "WhatsApp message",
+    "call": "Call",
+    "b2b": "B2B call booking"
+  },
+  "chat": {
+    "placeholder": "Ask anything — prices, routes, availability...",
+    "title": "Northstar AI Assistant",
+    "subtitle": "Replies in seconds",
+    "open": "Open chat",
+    "close": "Close"
+  }
+}

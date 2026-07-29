@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Etusivu",
+    "services": "Palvelut",
+    "vehicle": "Ajoneuvo",
+    "story": "Tarina",
+    "pricing": "Hinnat",
+    "business": "Yrityksille",
+    "contact": "Yhteystiedot",
+    "book": "Varaa kyyti"
+  },
+  "hero": {
+    "badge": "Satakunnan ensimmäinen premium-kuljetuskonsepti",
+    "title": "Tyylikäs pääsy joka kohteeseen",
+    "subtitle": "Premium executive -kuljetukset Polestar 4 -sähköautolla. Pori, Turku, Tampere, Helsinki — täsmällisesti, hiljaa, tyylikkäästi.",
+    "cta_book": "Varaa kyyti",
+    "cta_pricing": "Katso hinnat",
+    "scroll": "Vieritä alas"
+  },
+  "why": {
+    "title": "Miksi Northstar?",
+    "subtitle": "Emme ole taksi. Olemme premium-kokemus.",
+    "card1_title": "Täsmällisyys",
+    "card1_desc": "Seurataan lennot, liikennetilanne ja aikataulut — et odota, me odotamme.",
+    "card2_title": "Luksus-sähköauto",
+    "card2_desc": "Polestar 4 — hiljaa, tilava, nollapäästöinen. Bisnesluokan fiilis joka matkalla.",
+    "card3_title": "Diskreetti palvelu",
+    "card3_desc": "Nimetty kuljettaja, salassapito, ammattimainen käytös. Johtajatasolla."
+  },
+  "services": {
+    "title": "Palvelut",
+    "subtitle": "Kaikki kiinteällä hinnalla, ilman yllätyksiä",
+    "from": "alkaen",
+    "enquire": "Pyydä tarjous",
+    "book": "Varaa now"
+  },
+  "footer": {
+    "tagline": "Premium executive -kuljetukset Satakunnassa.",
+    "rights": "Kaikki oikeudet pidätetään.",
+    "links": "Linkit",
+    "contact": "Yhteystiedot",
+    "privacy": "Tietosuoja"
+  },
+  "booking": {
+    "title": "Varaa kyyti",
+    "subtitle": "Täytä tiedot — vahvistamme 1-2 tunnin sisällä",
+    "step1": "Palvelu",
+    "step2": "Ajankohta",
+    "step3": "Lisäpalvelut",
+    "step4": "Tietosi",
+    "step5": "Yhteenveto",
+    "service_label": "Valitse palvelu",
+    "from_label": "Lähtöpaikka",
+    "to_label": "Kohde",
+    "date_label": "Päivä",
+    "time_label": "Kellonaika",
+    "extras_label": "Lisäpalvelut (kaikki ilmaisia ellei hintalappu)",
+    "name_label": "Nimi",
+    "phone_label": "Puhelin",
+    "email_label": "Sähköposti",
+    "notes_label": "Erityistoiveet",
+    "deposit_info": "Varausmaksu 50 € laskutetaan vahvistuksen yhteydessä.",
+    "submit": "Lähetä varauskyyntö",
+    "submitting": "Lähetetään...",
+    "success_title": "Varauskyyntö vastaanotettu!",
+    "success_msg": "Vahvistamme varauksen 1-2 tunnin sisällä. Saat sähköpostiasi.",
+    "next": "Seuraava",
+    "prev": "Edellinen"
+  },
+  "contact": {
+    "title": "Yhteystiedot",
+    "subtitle": "Tavoitat meidät nopeimmin WhatsAppilla tai puhelimella.",
+    "form_title": "Lähetä viesti",
+    "name": "Nimi",
+    "email": "Sähköposti",
+    "message": "Viesti",
+    "send": "Lähetä",
+    "sending": "Lähetetään...",
+    "sent": "Viesti lähetetty!",
+    "whatsapp": "WhatsApp-pikaviesti",
+    "call": "Soita",
+    "b2b": "B2B-puhelinaika"
+  },
+  "chat": {
+    "placeholder": "Kysy mitä vain — hinnat, reitit, saatavuus...",
+    "title": "Northstar AI-assistentti",
+    "subtitle": "Vastaa muutamassa sekunnissa",
+    "open": "Avaa chat",
+    "close": "Sulje"
+  }
+}
